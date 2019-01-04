@@ -171,7 +171,7 @@ namespace ChatBotMat
                   sw.WriteLine(archivo);
                   sw.Close();
                 }
-
+                return;
               }
               else
               {
@@ -189,6 +189,7 @@ namespace ChatBotMat
           else
           {
             sendMessage("@" + cmd.userRequest.Name + " estas seguro que lo que envias es una imagen Kappa");
+            return;
           }
         }
 
