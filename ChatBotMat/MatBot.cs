@@ -31,17 +31,11 @@ namespace ChatBotMat
     public EventHandler onSalir;
     public readonly ConnectionCredentials credentials = new ConnectionCredentials(con.BotName, con.Key);
     TwitchClient client;
-    //public static Credentials con = new Credentials()
-    //{
-    //  BotName = "matew5001Bot",
-    //  Key = "itr7dwzqzobobl5307ekgh6qeddz7d",
-    //  Channel = "matew5001"
-    //};
     public static Credentials con = new Credentials()
     {
-      BotName = "pudindroid",
-      Key = "nnaq51v4l7xxu326oq1yu0r5ioir65",
-      Channel = "LydiaPudin"
+      BotName = "",
+      Key = "",
+      Channel = ""
     };
     //pudindroid
     public static string Channel { get; set; }
