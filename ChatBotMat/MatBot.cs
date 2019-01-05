@@ -52,8 +52,7 @@ namespace ChatBotMat
       //clientApi.OnStreamOnline += onStreamStarts;
       //clientApi.OnStreamOffline += onStreamOffLine;
       //clientApi.Start();
-
-
+      
       client = new TwitchClient();
       client.Initialize(credentials, Channel);
       client.OnJoinedChannel += joinedChanel;
@@ -61,6 +60,7 @@ namespace ChatBotMat
       client.OnRaidNotification += raidRecivido;
       client.OnModeratorJoined += joinModeratos;
       client.OnChannelStateChanged += ChanelChangedState;
+      client.OnWhisperReceived += onWisperReceiv;
       listaUsuariosxStream = new List<TUserJoined>();
       listaTimers = obternetTimers();
       foreach (var item in listaTimers)
@@ -72,6 +72,122 @@ namespace ChatBotMat
       messagesCount = 0;
       client.Connect();
 
+    }
+
+    private void onWisperReceiv(object sender, OnWhisperReceivedArgs e)
+    {
+      TUser us = verifiUserJoined(e);
+      messagesCount++;
+      commandRecived(e, out ChatCommandRequest cmd, out string[] arg);
+      cmd.userRequest = us;
+
+      if (arg[0].Equals("!pop") || arg[0].Equals("!addtimer") || arg[0].Equals("!addcom") || arg[0].Equals("!editcom") || arg[0].Equals("!delcom") || arg[0].Equals("!adduser") || arg[0].Equals("!edituser") || arg[0].Equals("!deluser") || arg[0].Equals("!end"))
+      {
+
+        if (string.IsNullOrEmpty(cmd.argumentos[0].Trim()))
+        {
+          sendWisper(cmd.userRequest.Name,"mal uso de el comando por favor leer la documentacion");
+          return;
+        }
+
+        if (cmd.Key.Equals("!pop"))
+        {
+          if (IsImageUrl(cmd.argumentos[0]))
+          {
+            bool res = esModerada(cmd.argumentos[0]);
+
+
+            if (res)
+            {
+              if (LastSendedIMG == null || DateTime.Now - LastSendedIMG > new TimeSpan(0, 0, 30))
+              {
+                LastSendedIMG = DateTime.Now;
+                string archivo = HTMLGeneratedIMG(cmd);
+
+                using (StreamWriter sw = new StreamWriter("Design/source.html"))
+                {
+                  sw.WriteLine(archivo);
+                  sw.Close();
+                }
+                return;
+              }
+              else
+              {
+                sendWisper(cmd.userRequest.Name,"@" + cmd.userRequest.Name + " , el spam es malo aunque divertido controlate... NotLikeThis");
+                return;
+              }
+            }
+            else
+            {
+              sendWisper(cmd.userRequest.Name,"@" + cmd.userRequest.Name + " , Este es un canal cristiano, ¿que es eso?... NotLikeThis NotLikeThis NotLikeThis");
+              return;
+            }
+
+          }
+          else
+          {
+            sendWisper(cmd.userRequest.Name,"@" + cmd.userRequest.Name + " estas seguro que lo que envias es una imagen Kappa");
+            return;
+          }
+        }
+
+        if (e.WhisperMessage.UserType == UserType.Moderator || e.WhisperMessage.UserType == UserType.Broadcaster)
+        {
+          #region comandos agregar
+          if ((cmd.Key.Equals("!addtimer")))
+          {
+            agregarTimer(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          //if ((cmd.Key.Equals("!edittimer")))
+          //{
+          //  editarTimer(cmd);
+          //}
+          //if ((cmd.Key.Equals("!deltimer")))
+          //{
+          //  eliminarTimer(cmd);
+          //}
+          #endregion
+          #region comandos agregar
+          if ((cmd.Key.Equals("!addcom")))
+          {
+            agregarComando(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          if ((cmd.Key.Equals("!editcom")))
+          {
+            editarComando(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          if ((cmd.Key.Equals("!delcom")))
+          {
+            eliminarComando(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          #endregion
+          #region saludos para mod
+          if ((cmd.Key.Equals("!adduser")))
+          {
+            agregarSaludoMod(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          if ((cmd.Key.Equals("!edituser")))
+          {
+            editarSaludoMod(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          if ((cmd.Key.Equals("!deluser")))
+          {
+            eliminarSaludoMod(cmd);
+            sendWisper(cmd.userRequest.Name,"agregado satisfactorio");
+          }
+          #endregion
+        }
+        else
+        {
+          sendWisper(cmd.userRequest.Name,"@" + e.WhisperMessage.Username + ", solo los moderadores pueden usar este comando");
+        }
+      }
     }
 
     private void onStreamOffLine(object sender, OnStreamOfflineArgs e)
@@ -132,12 +248,19 @@ namespace ChatBotMat
       }
       #endregion
 
-      if (arg[0].Equals("!pop") || arg[0].Equals("!addtimer") || arg[0].Equals("!addcom") || arg[0].Equals("!editcom") || arg[0].Equals("!delcom") || arg[0].Equals("!adduser") || arg[0].Equals("!edituser") || arg[0].Equals("!deluser") || arg[0].Equals("!end"))
+      if (arg[0].Equals("!hi") || arg[0].Equals("!pop") || arg[0].Equals("!addtimer") || arg[0].Equals("!addcom") || arg[0].Equals("!editcom") || arg[0].Equals("!delcom") || arg[0].Equals("!adduser") || arg[0].Equals("!edituser") || arg[0].Equals("!deluser") || arg[0].Equals("!end"))
       {
+
+        if (arg[0].Equals("!hi"))
+        {
+          sendWisper(cmd.userRequest.Name, "hola, soy un bot diseñado para ayudar e interactuar con " + Channel + ", por favor usa esta pestaña de susurro para enviar comandos y mantener limpio el chat de la transmisión de antemano gracias " +cmd.userRequest.Name  );
+          return;
+        }
 
         if (arg[0].Equals("!end"))
         {
           salir(e);
+          return;
         }
 
         if (string.IsNullOrEmpty(cmd.argumentos[0].Trim()))
@@ -315,6 +438,17 @@ $(document).ready(function() {
         return false;
       }
     }
+
+    private void commandRecived(OnWhisperReceivedArgs e, out ChatCommandRequest cmd, out string[] arg)
+    {
+      cmd = new ChatCommandRequest();
+      arg = e.WhisperMessage.Message.Split(" ");
+      cmd.Key = arg[0];
+      cmd.Value = e.WhisperMessage.Message.Replace(cmd.Key + " ", "");
+      cmd.argumentos = limpiarMensaje(e.WhisperMessage.Message.Replace(cmd.Key + " ", "")).Split(" ");
+      cmd.Channel = Channel;
+    }
+
     private void commandRecived(OnMessageReceivedArgs e, out ChatCommandRequest cmd, out string[] arg)
     {
       cmd = new ChatCommandRequest();
@@ -323,6 +457,18 @@ $(document).ready(function() {
       cmd.Value = e.ChatMessage.Message.Replace(cmd.Key + " ", "");
       cmd.argumentos = limpiarMensaje(e.ChatMessage.Message.Replace(cmd.Key + " ", "")).Split(" ");
       cmd.Channel = Channel;
+    }
+
+    private TUser verifiUserJoined(OnWhisperReceivedArgs e)
+    {
+      TUserJoined user = new TUserJoined() { Name = e.WhisperMessage.Username, isJoined = true, Nivel = e.WhisperMessage.UserType, Channel = Channel };
+      var foundit = listaUsuariosxStream.Find(x => x.Name.Equals(user.Name, StringComparison.CurrentCultureIgnoreCase) && user.Channel == Channel);
+      if (foundit == null)
+      {
+        listaUsuariosxStream.Add(user);
+        OnUserJoined(user);
+      }
+      return user;
     }
 
     private TUser verifiUserJoined(OnMessageReceivedArgs e)
@@ -438,6 +584,12 @@ $(document).ready(function() {
       salud.Saludo = cmd.Value.Substring(cmd.argumentos[0].Length + 1);
       return salud;
     }
+
+    public void sendWisper(string user,string pMsg)
+    {
+      client.SendWhisper(user, pMsg);
+    }
+
     public void sendMessage(string pMsg)
     {
       client.SendMessage(Channel, pMsg);
